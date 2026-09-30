@@ -1,0 +1,47 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### Secrets / local config ###
+application-dev.yaml
+.env
+*.pem
+*.key
+
+### Logs ###
+*.log
+logs/
+
+### Tool temp dirs ###
+.freebuff/
+.utim_tmp/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea/
+out/
+*.iws
+*.iml
+*.ipr
+
+### VS Code ###
+.vscode/
+
+### OS ###
+.DS_Store
+Thumbs.db
+desktop.ini
+
+### Java crash dumps ###
+hs_err_pid*
+replay_pid*

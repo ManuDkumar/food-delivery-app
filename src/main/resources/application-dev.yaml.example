@@ -1,0 +1,18 @@
+# Copy this file to application-dev.yaml and fill in real values.
+#   cp application-dev.yaml.example application-dev.yaml
+# application-dev.yaml is gitignored — real secrets never enter the repo.
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/food_delivery
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:changeme}
+
+app:
+  jwt:
+    # Generate: New-Object byte[] 48 | ... (see README) — min 32 bytes for HS256
+    secret: "replace-with-48-byte-base64-secret"
+  admin:
+    email: admin@example.com
+    password: ${ADMIN_PASSWORD:Admin@1234}
+    phone: "9876543200"

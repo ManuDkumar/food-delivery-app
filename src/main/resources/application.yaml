@@ -1,0 +1,15 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: food-delivery-app
+  profiles:
+    active: dev
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+app:
+  jwt:
+    expiration: 3600000
