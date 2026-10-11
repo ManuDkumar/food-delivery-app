@@ -5,6 +5,9 @@ spring:
     name: food-delivery-app
   profiles:
     active: dev
+  web:
+    error:
+      include-message: always
   jpa:
     hibernate:
       ddl-auto: update
