@@ -9,6 +9,7 @@ import dev.manu.food_delivery_app.enums.UserStatus;
 import dev.manu.food_delivery_app.repository.UserRepository;
 import dev.manu.food_delivery_app.security.JWTUtility;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -39,7 +40,11 @@ public class AuthService {
                 .role(Role.CUSTOMER)
                 .build();
 
-        userRepository.save(user);
+        try {
+            userRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email or phone already registered");
+        }
 
 
         return new AuthResponse(jwtUtility.generateToken(
@@ -58,7 +63,11 @@ public class AuthService {
                 .role(Role.RESTAURANT_OWNER)
                 .build();
 
-        userRepository.save(user);
+        try {
+            userRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email or phone already registered");
+        }
 
 
         return new AuthResponse(jwtUtility.generateToken(
@@ -77,7 +86,11 @@ public class AuthService {
                 .role(Role.ADMIN)
                 .build();
 
-        userRepository.save(user);
+        try {
+            userRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email or phone already registered");
+        }
 
 
         return new AuthResponse(jwtUtility.generateToken(

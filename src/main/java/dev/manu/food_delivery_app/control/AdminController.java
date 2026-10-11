@@ -1,5 +1,8 @@
 package dev.manu.food_delivery_app.control;
 
+import dev.manu.food_delivery_app.dto.AdminOrderResponse;
+import dev.manu.food_delivery_app.dto.AdminRestaurantResponse;
+import dev.manu.food_delivery_app.dto.AdminUserResponse;
 import dev.manu.food_delivery_app.enums.UserStatus;
 import dev.manu.food_delivery_app.service.AdminService;
 import lombok.AllArgsConstructor;
@@ -7,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -23,5 +27,23 @@ public class AdminController {
 
         adminService.updateStatus(userId, userStatus);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<AdminUserResponse> getAllUsers() {
+        return adminService.getAllUsers();
+    }
+
+    @GetMapping("/orders")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<AdminOrderResponse> getAllOrders() {
+        return adminService.getAllOrders();
+    }
+
+    @GetMapping("/restaurants")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<AdminRestaurantResponse>  getAllRestaurants() {
+        return adminService.getAllRestaurants();
     }
 }
