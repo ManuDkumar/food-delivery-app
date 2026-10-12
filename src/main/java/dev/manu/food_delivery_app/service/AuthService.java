@@ -1,8 +1,8 @@
 package dev.manu.food_delivery_app.service;
 
-import dev.manu.food_delivery_app.dto.AuthResponse;
-import dev.manu.food_delivery_app.dto.LoginRequest;
-import dev.manu.food_delivery_app.dto.RegisterRequest;
+import dev.manu.food_delivery_app.dto.auth.AuthResponse;
+import dev.manu.food_delivery_app.dto.auth.LoginRequest;
+import dev.manu.food_delivery_app.dto.user.RegisterRequest;
 import dev.manu.food_delivery_app.entity.User;
 import dev.manu.food_delivery_app.enums.Role;
 import dev.manu.food_delivery_app.enums.UserStatus;

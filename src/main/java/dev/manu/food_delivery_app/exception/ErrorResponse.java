@@ -1,4 +1,4 @@
-package dev.manu.food_delivery_app.dto;
+package dev.manu.food_delivery_app.exception;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

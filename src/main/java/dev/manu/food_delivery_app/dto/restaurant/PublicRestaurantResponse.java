@@ -1,4 +1,4 @@
-package dev.manu.food_delivery_app.dto;
+package dev.manu.food_delivery_app.dto.restaurant;
 
 import dev.manu.food_delivery_app.enums.RestaurantStatus;
 

@@ -1,7 +1,7 @@
 package dev.manu.food_delivery_app.control;
 
-import dev.manu.food_delivery_app.dto.OrderResponse;
-import dev.manu.food_delivery_app.dto.OrderStatusUpdateRequest;
+import dev.manu.food_delivery_app.dto.order.OrderResponse;
+import dev.manu.food_delivery_app.dto.order.OrderStatusUpdateRequest;
 import dev.manu.food_delivery_app.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/api/v1/orders")
 @AllArgsConstructor
 public class OrderController {
     private final OrderService orderService;

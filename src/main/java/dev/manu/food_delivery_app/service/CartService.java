@@ -1,9 +1,9 @@
 package dev.manu.food_delivery_app.service;
 
-import dev.manu.food_delivery_app.dto.CartItemRequest;
-import dev.manu.food_delivery_app.dto.CartItemResponse;
-import dev.manu.food_delivery_app.dto.CartQuantityUpdateRequest;
-import dev.manu.food_delivery_app.dto.CartResponse;
+import dev.manu.food_delivery_app.dto.cart.CartItemRequest;
+import dev.manu.food_delivery_app.dto.cart.CartItemResponse;
+import dev.manu.food_delivery_app.dto.cart.CartQuantityUpdateRequest;
+import dev.manu.food_delivery_app.dto.cart.CartResponse;
 import dev.manu.food_delivery_app.entity.CartItem;
 import dev.manu.food_delivery_app.entity.MenuItem;
 import dev.manu.food_delivery_app.entity.User;

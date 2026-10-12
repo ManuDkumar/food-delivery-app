@@ -1,8 +1,8 @@
 package dev.manu.food_delivery_app.control;
 
-import dev.manu.food_delivery_app.dto.PublicRestaurantResponse;
-import dev.manu.food_delivery_app.dto.RestaurantCreateRequest;
-import dev.manu.food_delivery_app.dto.RestaurantUpdateRequest;
+import dev.manu.food_delivery_app.dto.restaurant.PublicRestaurantResponse;
+import dev.manu.food_delivery_app.dto.restaurant.RestaurantCreateRequest;
+import dev.manu.food_delivery_app.dto.restaurant.RestaurantUpdateRequest;
 import dev.manu.food_delivery_app.enums.RestaurantStatus;
 import dev.manu.food_delivery_app.service.RestaurantService;
 import jakarta.validation.Valid;
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/restaurants")
+@RequestMapping("/api/v1/restaurants")
 @AllArgsConstructor
 public class RestaurantController {
 

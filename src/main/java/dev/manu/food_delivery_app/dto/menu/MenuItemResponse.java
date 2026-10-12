@@ -1,4 +1,4 @@
-package dev.manu.food_delivery_app.dto;
+package dev.manu.food_delivery_app.dto.menu;
 
 import java.math.BigDecimal;
 import java.util.Date;

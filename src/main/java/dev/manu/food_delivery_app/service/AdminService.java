@@ -1,8 +1,8 @@
 package dev.manu.food_delivery_app.service;
 
-import dev.manu.food_delivery_app.dto.AdminOrderResponse;
-import dev.manu.food_delivery_app.dto.AdminRestaurantResponse;
-import dev.manu.food_delivery_app.dto.AdminUserResponse;
+import dev.manu.food_delivery_app.dto.admin.AdminOrderResponse;
+import dev.manu.food_delivery_app.dto.admin.AdminRestaurantResponse;
+import dev.manu.food_delivery_app.dto.admin.AdminUserResponse;
 import dev.manu.food_delivery_app.entity.Order;
 import dev.manu.food_delivery_app.entity.Restaurant;
 import dev.manu.food_delivery_app.entity.User;

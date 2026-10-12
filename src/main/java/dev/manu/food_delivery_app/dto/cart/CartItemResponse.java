@@ -1,4 +1,4 @@
-package dev.manu.food_delivery_app.dto;
+package dev.manu.food_delivery_app.dto.cart;
 
 import java.math.BigDecimal;
 import java.util.UUID;

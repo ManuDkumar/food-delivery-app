@@ -1,8 +1,8 @@
 package dev.manu.food_delivery_app.control;
 
-import dev.manu.food_delivery_app.dto.MenuItemRequest;
-import dev.manu.food_delivery_app.dto.MenuItemResponse;
-import dev.manu.food_delivery_app.dto.MenuItemUpdateRequest;
+import dev.manu.food_delivery_app.dto.menu.MenuItemRequest;
+import dev.manu.food_delivery_app.dto.menu.MenuItemResponse;
+import dev.manu.food_delivery_app.dto.menu.MenuItemUpdateRequest;
 import dev.manu.food_delivery_app.service.MenuItemService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 @AllArgsConstructor
 public class MenuItemController {
     private final MenuItemService menuItemService;

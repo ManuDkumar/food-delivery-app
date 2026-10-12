@@ -1,8 +1,8 @@
 package dev.manu.food_delivery_app.service;
 
-import dev.manu.food_delivery_app.dto.OrderItemResponse;
-import dev.manu.food_delivery_app.dto.OrderResponse;
-import dev.manu.food_delivery_app.dto.OrderStatusUpdateRequest;
+import dev.manu.food_delivery_app.dto.order.OrderItemResponse;
+import dev.manu.food_delivery_app.dto.order.OrderResponse;
+import dev.manu.food_delivery_app.dto.order.OrderStatusUpdateRequest;
 import dev.manu.food_delivery_app.entity.*;
 import dev.manu.food_delivery_app.enums.OrderStatus;
 import dev.manu.food_delivery_app.repository.CartItemRepository;

@@ -1,19 +1,18 @@
-package dev.manu.food_delivery_app.dto;
+package dev.manu.food_delivery_app.dto.admin;
 
-import dev.manu.food_delivery_app.entity.OrderItem;
 import dev.manu.food_delivery_app.enums.OrderStatus;
 
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
-public record OrderResponse(
+public record AdminOrderResponse(
         UUID id,
         UUID restaurantId,
         String restaurantName,
+        String customerName,
+        String customerEmail,
         OrderStatus status,
-        List<OrderItemResponse> items,
         BigDecimal totalAmount,
         Date createdAt
 ) {

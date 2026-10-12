@@ -1,8 +1,8 @@
 package dev.manu.food_delivery_app.control;
 
-import dev.manu.food_delivery_app.dto.AdminOrderResponse;
-import dev.manu.food_delivery_app.dto.AdminRestaurantResponse;
-import dev.manu.food_delivery_app.dto.AdminUserResponse;
+import dev.manu.food_delivery_app.dto.admin.AdminOrderResponse;
+import dev.manu.food_delivery_app.dto.admin.AdminRestaurantResponse;
+import dev.manu.food_delivery_app.dto.admin.AdminUserResponse;
 import dev.manu.food_delivery_app.enums.UserStatus;
 import dev.manu.food_delivery_app.service.AdminService;
 import lombok.AllArgsConstructor;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/v1/admin")
 @AllArgsConstructor
 public class AdminController {
 

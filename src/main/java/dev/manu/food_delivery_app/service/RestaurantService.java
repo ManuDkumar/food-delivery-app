@@ -1,8 +1,8 @@
 package dev.manu.food_delivery_app.service;
 
-import dev.manu.food_delivery_app.dto.PublicRestaurantResponse;
-import dev.manu.food_delivery_app.dto.RestaurantCreateRequest;
-import dev.manu.food_delivery_app.dto.RestaurantUpdateRequest;
+import dev.manu.food_delivery_app.dto.restaurant.PublicRestaurantResponse;
+import dev.manu.food_delivery_app.dto.restaurant.RestaurantCreateRequest;
+import dev.manu.food_delivery_app.dto.restaurant.RestaurantUpdateRequest;
 import dev.manu.food_delivery_app.entity.Restaurant;
 import dev.manu.food_delivery_app.entity.User;
 import dev.manu.food_delivery_app.enums.RestaurantStatus;

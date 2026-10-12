@@ -1,6 +1,6 @@
 package dev.manu.food_delivery_app.security;
 
-import dev.manu.food_delivery_app.dto.ErrorResponse;
+import dev.manu.food_delivery_app.exception.ErrorResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

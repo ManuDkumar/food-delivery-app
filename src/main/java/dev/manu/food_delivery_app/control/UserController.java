@@ -1,7 +1,7 @@
 package dev.manu.food_delivery_app.control;
 
-import dev.manu.food_delivery_app.dto.ProfileResponse;
-import dev.manu.food_delivery_app.dto.ProfileUpdateRequest;
+import dev.manu.food_delivery_app.dto.user.ProfileResponse;
+import dev.manu.food_delivery_app.dto.user.ProfileUpdateRequest;
 import dev.manu.food_delivery_app.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/v1/user")
 @AllArgsConstructor
 public class UserController {
 

@@ -1,7 +1,7 @@
 package dev.manu.food_delivery_app.service;
 
-import dev.manu.food_delivery_app.dto.ProfileResponse;
-import dev.manu.food_delivery_app.dto.ProfileUpdateRequest;
+import dev.manu.food_delivery_app.dto.user.ProfileResponse;
+import dev.manu.food_delivery_app.dto.user.ProfileUpdateRequest;
 import dev.manu.food_delivery_app.entity.User;
 import dev.manu.food_delivery_app.enums.UserStatus;
 import dev.manu.food_delivery_app.repository.UserRepository;

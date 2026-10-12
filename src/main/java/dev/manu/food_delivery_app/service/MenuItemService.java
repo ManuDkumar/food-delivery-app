@@ -1,8 +1,8 @@
 package dev.manu.food_delivery_app.service;
 
-import dev.manu.food_delivery_app.dto.MenuItemRequest;
-import dev.manu.food_delivery_app.dto.MenuItemResponse;
-import dev.manu.food_delivery_app.dto.MenuItemUpdateRequest;
+import dev.manu.food_delivery_app.dto.menu.MenuItemRequest;
+import dev.manu.food_delivery_app.dto.menu.MenuItemResponse;
+import dev.manu.food_delivery_app.dto.menu.MenuItemUpdateRequest;
 import dev.manu.food_delivery_app.entity.MenuItem;
 import dev.manu.food_delivery_app.entity.Restaurant;
 import dev.manu.food_delivery_app.entity.User;

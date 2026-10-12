@@ -1,6 +1,5 @@
 package dev.manu.food_delivery_app.exception;
 
-import dev.manu.food_delivery_app.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
