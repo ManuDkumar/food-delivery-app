@@ -6,6 +6,8 @@ import dev.manu.food_delivery_app.dto.AdminUserResponse;
 import dev.manu.food_delivery_app.entity.Order;
 import dev.manu.food_delivery_app.entity.Restaurant;
 import dev.manu.food_delivery_app.entity.User;
+import dev.manu.food_delivery_app.enums.RestaurantStatus;
+import dev.manu.food_delivery_app.enums.Role;
 import dev.manu.food_delivery_app.enums.UserStatus;
 import dev.manu.food_delivery_app.repository.OrderRepository;
 import dev.manu.food_delivery_app.repository.RestaurantRepository;
@@ -46,6 +48,12 @@ public class AdminService {
         }
         user.setUserStatus(userStatus);
         userRepository.save(user);
+
+        if (user.getRole() == Role.RESTAURANT_OWNER && userStatus != UserStatus.ACTIVE) {
+            restaurantRepository.findByOwner(user).stream()
+                    .filter(restaurant -> restaurant.getStatus() == RestaurantStatus.OPEN)
+                    .forEach(restaurant -> restaurant.setStatus(RestaurantStatus.CLOSED));
+        }
     }
     private AdminUserResponse toAdminUserResponse(User user) {
         return new AdminUserResponse(
