@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:foodtest;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  web:
+    error:
+      include-message: always
+
+app:
+  jwt:
+    secret: "orenu-nava-monkey-d-luffy-kaizokoni-naru-odukuda"
+    expiration: 3600000
+  admin:
+    email: admin@gmail.com
+    password: Admin@123
+    phone:  9167676776
