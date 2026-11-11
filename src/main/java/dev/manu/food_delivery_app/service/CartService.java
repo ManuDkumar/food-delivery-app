@@ -10,9 +10,11 @@ import dev.manu.food_delivery_app.entity.User;
 import dev.manu.food_delivery_app.repository.CartItemRepository;
 import dev.manu.food_delivery_app.repository.MenuItemRepository;
 import dev.manu.food_delivery_app.repository.UserRepository;
+import dev.manu.food_delivery_app.security.AuthUserDetails;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,12 @@ public class CartService {
     //Helper: private functions for help
 
     private User getUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.getPrincipal() instanceof AuthUserDetails authUser) {
+            return authUser.getUser();
+        }
+
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         User user = userRepository.findByEmail(email).orElseThrow(
@@ -68,7 +76,7 @@ public class CartService {
 
     @Transactional(readOnly = true)
     public CartResponse getCart() {
-        return toCartResponse(cartItemRepository.findByUserOrderByCreatedAtAsc(getUser()));
+        return toCartResponse(cartItemRepository.findCartWithMenuItems(getUser()));
     }
 
     @Transactional
@@ -87,7 +95,9 @@ public class CartService {
 
         User user = getUser();
 
-        Optional<CartItem> existing = cartItemRepository.findByUserAndMenuItem(user, menuItem);
+        List<CartItem> cart = cartItemRepository.findCartWithMenuItems(user);
+        Optional<CartItem> existing = cart.stream()
+                .filter(ci -> ci.getMenuItem().getId().equals(request.menuItemId())).findFirst();
 
         if (existing.isPresent()) {
             CartItem item = existing.get();
@@ -98,10 +108,10 @@ public class CartService {
             }
             item.setQuantity(newQuantity);
             cartItemRepository.save(item);
-            return toCartResponse(cartItemRepository.findByUserOrderByCreatedAtAsc(user));
+            return toCartResponse(cart);
         }
 
-        for (CartItem ci : cartItemRepository.findByUserOrderByCreatedAtAsc(user)) {
+        for (CartItem ci : cart) {
             if (! ci.getMenuItem().isActive() || !ci.getMenuItem().isAvailable()) continue;
 
             if (!ci.getMenuItem().getRestaurant().getId().equals(menuItem.getRestaurant().getId())) {
@@ -120,8 +130,8 @@ public class CartService {
         } catch (DataIntegrityViolationException e) {
             throw  new ResponseStatusException(HttpStatus.CONFLICT, "Cart item already exists");
         }
-
-        return toCartResponse(cartItemRepository.findByUserOrderByCreatedAtAsc(user));
+        cart.add(fresh);
+        return toCartResponse(cart);
     }
 
     @Transactional
@@ -139,7 +149,7 @@ public class CartService {
 
         cartItem.get().setQuantity(request.quantity());
         cartItemRepository.save(cartItem.get());
-        return toCartResponse(cartItemRepository.findByUserOrderByCreatedAtAsc(user));
+        return toCartResponse(cartItemRepository.findCartWithMenuItems(user));
     }
 
     @Transactional
@@ -155,7 +165,7 @@ public class CartService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart item not found");
         }
         cartItemRepository.delete(cartItem.get());
-        return toCartResponse(cartItemRepository.findByUserOrderByCreatedAtAsc(user));
+        return toCartResponse(cartItemRepository.findCartWithMenuItems(user));
     }
 
     @Transactional

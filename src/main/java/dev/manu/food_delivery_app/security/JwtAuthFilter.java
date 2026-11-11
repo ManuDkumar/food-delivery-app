@@ -1,8 +1,6 @@
 package dev.manu.food_delivery_app.security;
 
-import dev.manu.food_delivery_app.entity.User;
 import dev.manu.food_delivery_app.enums.UserStatus;
-import dev.manu.food_delivery_app.repository.UserRepository;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,7 +10,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -26,7 +23,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JWTUtility jwtUtility;
     private final CustomUserDetailsService customUserDetailsService;
-    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(
@@ -46,15 +42,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             try {
                 email = jwtUtility.extractUsername(authToken);
-                UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
+                AuthUserDetails authUser = (AuthUserDetails) customUserDetailsService.loadUserByUsername(email);
 
-                User user = userRepository.findByEmail(email)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-                if (user.getUserStatus() == UserStatus.ACTIVE) {
-                    if (jwtUtility.validateToken(userDetails, authToken)) {
+                if (authUser.getUser().getUserStatus() == UserStatus.ACTIVE) {
+                    if (jwtUtility.validateToken(authUser, authToken)) {
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(
-                                        userDetails, null, userDetails.getAuthorities()
+                                        authUser, null, authUser.getAuthorities()
                                 );
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }

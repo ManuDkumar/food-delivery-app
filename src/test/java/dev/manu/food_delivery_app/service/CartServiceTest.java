@@ -121,14 +121,14 @@ public class CartServiceTest {
 
         when(menuItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
         when(userRepository.findByEmail(customer.getEmail())).thenReturn(Optional.of(customer));
-        when(cartItemRepository.findByUserAndMenuItem(customer, item)).thenReturn(Optional.of(cartItem));
+        when(cartItemRepository.findCartWithMenuItems(customer)).thenReturn(List.of(cartItem));
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> cartService.addItemToCart(request));
         assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(ex.getReason()).isEqualTo("Quantity exceeded, maximum allowed quantity is 100");
 
-        verify(cartItemRepository, times(1)).findByUserAndMenuItem(customer, item);
+        verify(cartItemRepository, times(1)).findCartWithMenuItems(customer);
     }
 
     @Test
@@ -145,7 +145,7 @@ public class CartServiceTest {
 
         when(menuItemRepository.findById(itemToAdd.getId())).thenReturn(Optional.of(itemToAdd));
         when(userRepository.findByEmail(customer.getEmail())).thenReturn(Optional.of(customer));
-        when(cartItemRepository.findByUserOrderByCreatedAtAsc(customer)).thenReturn(List.of(cartItem));
+        when(cartItemRepository.findCartWithMenuItems(customer)).thenReturn(List.of(cartItem));
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> cartService.addItemToCart(request));
@@ -167,8 +167,7 @@ public class CartServiceTest {
 
         when(menuItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
         when(userRepository.findByEmail(customer.getEmail())).thenReturn(Optional.of(customer));
-        when(cartItemRepository.findByUserAndMenuItem(customer, item)).thenReturn(Optional.of(cartItem));
-        when(cartItemRepository.findByUserOrderByCreatedAtAsc(customer)).thenReturn(List.of(cartItem));
+        when(cartItemRepository.findCartWithMenuItems(customer)).thenReturn(List.of(cartItem));
         CartResponse response = cartService.addItemToCart(request);
 
         assertThat(response.total()).isEqualTo(BigDecimal.valueOf(75));

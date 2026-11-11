@@ -5,9 +5,11 @@ import dev.manu.food_delivery_app.dto.user.ProfileUpdateRequest;
 import dev.manu.food_delivery_app.entity.User;
 import dev.manu.food_delivery_app.enums.UserStatus;
 import dev.manu.food_delivery_app.repository.UserRepository;
+import dev.manu.food_delivery_app.security.AuthUserDetails;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -17,8 +19,18 @@ import org.springframework.web.server.ResponseStatusException;
 @AllArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-
     public ProfileResponse getProfile() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.getPrincipal() instanceof AuthUserDetails authUser) {
+            User user = authUser.getUser();
+            return new ProfileResponse(
+                    user.getName(),
+                    user.getEmail(),
+                    user.getPhone(),
+                    user.getRole().name());
+        }
+
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow(
                 () -> new UsernameNotFoundException(HttpStatus.NOT_FOUND + email + " not found")

@@ -8,8 +8,10 @@ import dev.manu.food_delivery_app.enums.OrderStatus;
 import dev.manu.food_delivery_app.repository.CartItemRepository;
 import dev.manu.food_delivery_app.repository.OrderRepository;
 import dev.manu.food_delivery_app.repository.UserRepository;
+import dev.manu.food_delivery_app.security.AuthUserDetails;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +32,12 @@ public class OrderService {
 
 
     private User getUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.getPrincipal() instanceof AuthUserDetails authUser) {
+            return authUser.getUser();
+        }
+
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         return userRepository.findByEmail(email).orElseThrow(
@@ -51,7 +59,7 @@ public class OrderService {
     @Transactional
     public OrderResponse placeOrder() {
         User currentUser = getUser();
-        List<CartItem> cart = cartItemRepository.findByUserOrderByCreatedAtAsc(currentUser);
+        List<CartItem> cart = cartItemRepository.findCartWithMenuItems(currentUser);
 
         if (cart.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Cart is empty");
@@ -111,7 +119,7 @@ public class OrderService {
 
 
     public List<OrderResponse> getMyOrders() {
-        return orderRepository.findByCustomerOrderByCreatedAtDesc(getUser()).stream()
+        return orderRepository.findMyOrdersWithItems(getUser()).stream()
                 .map(this::toOrderResponse).toList();
     }
 

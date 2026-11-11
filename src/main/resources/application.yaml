@@ -11,7 +11,17 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
+
+    properties:
+      hibernate:
+        generate_statistics: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics
 
 app:
   jwt:

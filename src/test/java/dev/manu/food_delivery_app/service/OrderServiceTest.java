@@ -100,7 +100,7 @@ public class OrderServiceTest {
         User customer =  user("customer@test.com");
 
         when(userRepository.findByEmail(customer.getEmail())).thenReturn(Optional.of(customer));
-        when(cartItemRepository.findByUserOrderByCreatedAtAsc(customer)).thenReturn(List.of());
+        when(cartItemRepository.findCartWithMenuItems(customer)).thenReturn(List.of());
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> orderService.placeOrder());
 
@@ -115,7 +115,7 @@ public class OrderServiceTest {
         CartItem cartItem = cartItem(customer, menuItem, 10);
 
         when(userRepository.findByEmail(customer.getEmail())).thenReturn(Optional.of(customer));
-        when(cartItemRepository.findByUserOrderByCreatedAtAsc(customer)).thenReturn(List.of(cartItem));
+        when(cartItemRepository.findCartWithMenuItems(customer)).thenReturn(List.of(cartItem));
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> orderService.placeOrder());
 
         assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
@@ -130,7 +130,7 @@ public class OrderServiceTest {
         CartItem cartItem = cartItem(customer, menuItem, 10);
 
         when(userRepository.findByEmail(customer.getEmail())).thenReturn(Optional.of(customer));
-        when(cartItemRepository.findByUserOrderByCreatedAtAsc(customer)).thenReturn(List.of(cartItem));
+        when(cartItemRepository.findCartWithMenuItems(customer)).thenReturn(List.of(cartItem));
 
         when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
