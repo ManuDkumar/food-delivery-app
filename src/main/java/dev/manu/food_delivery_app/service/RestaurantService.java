@@ -11,6 +11,8 @@ import dev.manu.food_delivery_app.repository.RestaurantRepository;
 import dev.manu.food_delivery_app.repository.UserRepository;
 import dev.manu.food_delivery_app.security.AuthUserDetails;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +32,7 @@ public class RestaurantService {
     private final RestaurantRepository restaurantRepository;
     private final UserRepository userRepository;
 
-
+    @Cacheable("restaurants")
     @Transactional(readOnly = true)
     public List<PublicRestaurantResponse> listAll() {
 
@@ -57,7 +59,7 @@ public class RestaurantService {
         Restaurant restaurant = getRestaurantOrThrow(id);
         return getPublicRestaurantResponse(restaurant);
     }
-
+    @CacheEvict(value = "restaurants", allEntries = true)
     @Transactional
     public PublicRestaurantResponse createRestaurant(RestaurantCreateRequest restaurantCreateRequest) {
         User user = getUser();
@@ -80,6 +82,7 @@ public class RestaurantService {
         return getPublicRestaurantResponse(restaurant);
     }
 
+    @CacheEvict(value = "restaurants", allEntries = true)
     @Transactional
     public PublicRestaurantResponse updateRestaurant(
             UUID id, RestaurantUpdateRequest restaurantUpdateRequest) {
@@ -107,6 +110,7 @@ public class RestaurantService {
         return getPublicRestaurantResponse(updatedRestaurant);
     }
 
+    @CacheEvict(value = "restaurants", allEntries = true)
     @Transactional
     public PublicRestaurantResponse updateRestaurantStatus(
             UUID id, RestaurantStatus restaurantStatus) {
