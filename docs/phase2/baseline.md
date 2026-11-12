@@ -73,6 +73,7 @@ Hot paths fully measured; cold admin/owner paths pending (they are low-traffic; 
 | #3 OrderService: joined cart query + principal user ✅ | — | placeOrder: **16 → 9 statements**, selects 5 → 1 (same single checkout) |
 | #4 addItemToCart single-load rewrite ✅ | **4** | add-to-cart: ~12 → **4 statements** (cart size-independent); one joined load serves existing-check + restaurant-check + response; update/remove responses moved to joined query too. Tests 48/48 green |
 | #5 getMyOrders JOIN FETCH ✅ | **2** | GET /orders: **142 → 2 lines** (137-order user, same request). Was 1 + N queries (N = order count, unbounded — 544 ms at 137 orders, now 296 ms). Discovered by k6 finale re-run: history read scales with data. Known same-family spot: owner order lists (OrderService ~155), not yet fixed |
+| #6 @Version on CartItem (Step 11) ✅ | — | correctness fix, not speed. Lost-update race demonstrated: 2 simultaneous PATCHes → old world: both 200, last write silently wins; new world: 30×200 + **10×409** "changed by another request", zero silent losses. Lesson: catch Spring's translated type (`org.springframework.dao.OptimisticLockingFailureException`), never the Hibernate-internal one. Schema lesson: adding NOT NULL column to non-empty table needs backfill (`ADD COLUMN ... NOT NULL DEFAULT 0`) — prod would use Flyway |
 
 *cold start (first request after boot). Warm = row 2.
 Volume row 3: 1,160 journeys. Volume row 4: 1,087 journeys (~1,087 orders), 5,520 requests.
@@ -121,7 +122,7 @@ Formula: `3 + N` for N cart items. Login adds `2 × users` (authenticationManage
 2. ~~**Cart N+1**~~ ✅ fixed (#1, #4) — `findCartWithMenuItems` JOIN FETCH, cart = 2 SQL
 3. ~~**placeOrder lazy loop**~~ ✅ fixed (#3) — joined query, checkout = 9 statements
 4. ~~**History list N+1**~~ ✅ fixed (#5) — `getMyOrders` JOIN FETCH (discovered by finale re-run)
-5. **Cart lost-update race** — read-modify-write, no `@Version` → Step 11
+5. ~~**Cart lost-update race**~~ ✅ fixed (Step 11, fix #6) — `@Version` optimistic locking + 409 handler, race demonstrated with cart-race.js
 6. **No pagination** on list endpoints (orders, admin lists) — grows linearly with data → Step 12+ candidates
 7. **Owner order lists** (OrderService ~155) + admin/owner endpoints — same N+1 family, cold paths, pending smoke/measure
 

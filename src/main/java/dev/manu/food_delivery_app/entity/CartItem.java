@@ -49,4 +49,8 @@ public class CartItem {
     public void preUpdate() {
         updatedAt = new Date();
     }
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
 }

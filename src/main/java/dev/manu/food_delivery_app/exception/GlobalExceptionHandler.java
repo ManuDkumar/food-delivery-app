@@ -2,6 +2,7 @@ package dev.manu.food_delivery_app.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -72,6 +73,13 @@ public class GlobalExceptionHandler {
         log.error("Unhandled exception on {} {}" , request.getMethod(), request.getRequestURI(), exception);
         return ResponseEntity.status(500).body(body(500, "Internal server error", request, null));
     }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handleStaleWrite(
+            OptimisticLockingFailureException exception, HttpServletRequest request) {
+        return ResponseEntity.status(409).body(body(409, "Item changed by another request. Refresh and try again write.", request, null));
+    }
+
 
     private ErrorResponse body(
             int status, String message, HttpServletRequest request, List<ErrorResponse.FieldError> fieldErrors
