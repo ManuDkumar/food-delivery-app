@@ -75,6 +75,7 @@ Hot paths fully measured; cold admin/owner paths pending (they are low-traffic; 
 | #5 getMyOrders JOIN FETCH ✅ | **2** | GET /orders: **142 → 2 lines** (137-order user, same request). Was 1 + N queries (N = order count, unbounded — 544 ms at 137 orders, now 296 ms). Discovered by k6 finale re-run: history read scales with data. Known same-family spot: owner order lists (OrderService ~155), not yet fixed |
 | #6 @Version on CartItem (Step 11) ✅ | — | correctness fix, not speed. Lost-update race demonstrated: 2 simultaneous PATCHes → old world: both 200, last write silently wins; new world: 30×200 + **10×409** "changed by another request", zero silent losses. Lesson: catch Spring's translated type (`org.springframework.dao.OptimisticLockingFailureException`), never the Hibernate-internal one. Schema lesson: adding NOT NULL column to non-empty table needs backfill (`ADD COLUMN ... NOT NULL DEFAULT 0`) — prod would use Flyway |
 | #7 @Cacheable restaurants (Step 12) ✅ | **0** (after first) | GET /restaurants: 1 SQL → **1 on first call, 0 on every hit**. All 4 write paths `@CacheEvict(allEntries)` — verified live: write → wipe → next read = 1 SQL reprint. Cache DTOs not entities; never version a Boot starter (cache starter was fine, IDE just needed sync); @CachePut unsafe when return type ≠ cached type (list cache) → evict-on-write is the simple-correct default. Smoke: 10 reqs, 1 SQL total, p95 10.19ms |
+| #8 pagination on GET /orders ✅ | **4** | my-orders paged: `Page<Order>` + JOIN FETCH restaurant (to-one = pagination-safe) + ONE items query for the page (`WHERE oi.order IN :10`) + count for metadata. **193-order user: was 142 lines + 137-order payload → now 4 lines/page + 10-order payload, constant forever.** `offset ? rows fetch first ? rows only` visible in SQL on page 1. Trap recorded: collection JOIN FETCH + Pageable = in-memory pagination (HHH90003004) — page first, fetch items for the page separately |
 
 *cold start (first request after boot). Warm = row 2.
 Volume row 3: 1,160 journeys. Volume row 4: 1,087 journeys (~1,087 orders), 5,520 requests.
@@ -102,7 +103,7 @@ measure re-runs at growing data scale, not just fixed scale.
 | GET /cart (N-item cart) | 3 + N | **2** | constant |
 | POST /cart/items | ~12 | **4** | constant |
 | POST /orders | 16 | **9** | constant |
-| GET /orders (N orders) | **N + 5 (unbounded!)** | **2** | constant |
+| GET /orders (N orders) | **N + 5 (unbounded!)** | **4 lines/page** (page + count + items + filter) · payload bounded to page size | constant |
 
 ## SQL forensics (proven by show-sql, single requests)
 
@@ -124,7 +125,7 @@ Formula: `3 + N` for N cart items. Login adds `2 × users` (authenticationManage
 3. ~~**placeOrder lazy loop**~~ ✅ fixed (#3) — joined query, checkout = 9 statements
 4. ~~**History list N+1**~~ ✅ fixed (#5) — `getMyOrders` JOIN FETCH (discovered by finale re-run)
 5. ~~**Cart lost-update race**~~ ✅ fixed (Step 11, fix #6) — `@Version` optimistic locking + 409 handler, race demonstrated with cart-race.js
-6. **No pagination** on list endpoints (orders, admin lists) — grows linearly with data → Step 12+ candidates
+6. ~~**No pagination on list reads**~~ ✅ fixed (fix #8) — GET /orders paged (PageResponse envelope); owner/admin lists remain (cold paths)
 7. **Owner order lists** (OrderService ~155) + admin/owner endpoints — same N+1 family, cold paths, pending smoke/measure
 
 ## Caveats / honesty

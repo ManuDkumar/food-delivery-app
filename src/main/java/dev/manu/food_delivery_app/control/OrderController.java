@@ -2,9 +2,13 @@ package dev.manu.food_delivery_app.control;
 
 import dev.manu.food_delivery_app.dto.order.OrderResponse;
 import dev.manu.food_delivery_app.dto.order.OrderStatusUpdateRequest;
+import dev.manu.food_delivery_app.dto.order.PageResponse;
 import dev.manu.food_delivery_app.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,8 +31,9 @@ public class OrderController {
 
     @GetMapping
     @PreAuthorize("hasRole('CUSTOMER')")
-    public List<OrderResponse> getCustomerOrder() {
-        return orderService.getMyOrders();
+    public PageResponse<OrderResponse> getCustomerOrder(
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+    return orderService.getMyOrders(pageable);
     }
 
     @GetMapping("/{orderId}")

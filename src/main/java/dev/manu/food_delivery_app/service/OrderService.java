@@ -3,13 +3,17 @@ package dev.manu.food_delivery_app.service;
 import dev.manu.food_delivery_app.dto.order.OrderItemResponse;
 import dev.manu.food_delivery_app.dto.order.OrderResponse;
 import dev.manu.food_delivery_app.dto.order.OrderStatusUpdateRequest;
+import dev.manu.food_delivery_app.dto.order.PageResponse;
 import dev.manu.food_delivery_app.entity.*;
 import dev.manu.food_delivery_app.enums.OrderStatus;
 import dev.manu.food_delivery_app.repository.CartItemRepository;
+import dev.manu.food_delivery_app.repository.OrderItemRepository;
 import dev.manu.food_delivery_app.repository.OrderRepository;
 import dev.manu.food_delivery_app.repository.UserRepository;
 import dev.manu.food_delivery_app.security.AuthUserDetails;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,7 +23,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -29,6 +35,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final CartItemRepository cartItemRepository;
+    private final OrderItemRepository orderItemRepository;
 
 
     private User getUser() {
@@ -105,22 +112,33 @@ public class OrderService {
     }
 
     private OrderResponse toOrderResponse(Order savedOrder) {
+        return toOrderResponse(savedOrder, savedOrder.getOrderItems());
+    }
+
+    private OrderResponse toOrderResponse(Order o, List<OrderItem> items) {
         return new OrderResponse(
-                savedOrder.getId(),
-                savedOrder.getRestaurant().getId(),
-                savedOrder.getRestaurant().getName(),
-                savedOrder.getStatus(),
-                savedOrder.getOrderItems().stream()
+                o.getId(),
+                o.getRestaurant().getId(),
+                o.getRestaurant().getName(),
+                o.getStatus(),
+                items.stream()
                         .map(this::toOrderItemResponse).toList(),
-                savedOrder.getTotalPrice(),
-                savedOrder.getCreatedAt()
+                o.getTotalPrice(),
+                o.getCreatedAt()
         );
     }
 
+    public PageResponse<OrderResponse> getMyOrders(Pageable pageable) {
+        Page<Order> page = orderRepository.findMyOrders(getUser(), pageable);
+        List<Order>  orders = page.getContent();
 
-    public List<OrderResponse> getMyOrders() {
-        return orderRepository.findMyOrdersWithItems(getUser()).stream()
-                .map(this::toOrderResponse).toList();
+        Map<UUID, List<OrderItem>> itemsByOrder = orders.isEmpty() ? Map.of() :
+                orderItemRepository.findItemsOfOrders(orders).stream()
+                        .collect(Collectors.groupingBy(oi -> oi.getOrder().getId()));
+        List<OrderResponse> content = orders.stream()
+                .map(o -> toOrderResponse(o, itemsByOrder.getOrDefault(o.getId(), List.of())))
+                .toList();
+        return PageResponse.from(page, content);
     }
 
     public OrderResponse getOrder(UUID id) {
