@@ -96,6 +96,17 @@ It was `GET /orders`' unbounded N+1 growing with order count, unmasked by data g
 p95 is stable and BETTER than baseline. Lesson recorded: a list read whose cost grows with data is a time bomb;
 measure re-runs at growing data scale, not just fixed scale.
 
+## Post-pagination re-run (2026-11-16, 20 VUs × 60s — fixes #1–#8 live)
+
+| Metric | Baseline (~55 orders/user) | Now (~250 orders/user — 4.5× data) |
+|---|---|---|
+| med | 14.16ms | **12.00ms** |
+| p95 | 54.68ms | 57.84ms (+6% at 4.5× data) |
+| journeys / reqs | 1,087 / 5,520 | 1,100 / 5,585 |
+
+Headline: at 4.5× the data scale, latency is essentially flat (and med improved). In the un-fixed N+1 era the same
+data growth exploded p95 292 → 708ms. Phase 2 thesis proven with our own curve: constant SQL shape = flat latency curve.
+
 ## SQL shape summary (the durable metric)
 
 | Endpoint | Before | After | Property |
