@@ -3,6 +3,41 @@
 Date: 2026-11-10/11 · App: Spring Boot 4.1.1, Java 17, port 8081 · DB: PostgreSQL `food_delivery` (local) · Load tool: k6 v2.2.0
 Scripts: `performance-tests/*.js` · Data: dev DB (~3+2 restaurants, ~16+ menu items, ~100+ orders after run 3)
 
+## Gate decisions (Steps 13-14) — closed with evidence, 2026-11-17
+
+| Gate | Decision | Evidence |
+|---|---|---|
+| Caching | **ADOPTED** (restaurants catalog) | implemented + verified (fix #7): hit = 0 SQL, writes reprint the board |
+| First service extraction | **DEFERRED** | p95 57.84ms at 4.5× baseline data; no runaway module; single developer. Triggers that reopen it: one module's load profile diverges wildly; 2nd team joins and deploys conflict; a part needs a different datastore |
+| Outbox / eventing | **DEFERRED** | becomes relevant only with multi-service messaging (Phase 3 tool, not a monolith tool) |
+
+## Phase 2 verdict — executive summary
+
+Method: k6 journey-based load tests + actuator + show-sql SQL forensics; every fix went through
+count → predict → fix → count again. Nine fixes, each verified by measured before/after.
+
+Final SQL shape of every hot/cold list read is CONSTANT (no cost term that grows with data):
+
+| Endpoint | Before | After |
+|---|---|---|
+| GET /cart | 3 + N | 2 |
+| POST /cart/items | ~12 | 4 |
+| POST /orders | 16 | 9 |
+| GET /orders | N + 5 (unbounded) | 4/page |
+| GET /orders/restaurant/mine | 1 + N (unbounded) | 4/page |
+| GET /admin/orders | ~28 + N rows | 3/page |
+
+Final load run (20 VUs × 60s): p95 57.84ms / med 12.00ms at ~4.5× baseline data scale — essentially
+flat vs baseline 54.68ms at the original scale, where the un-fixed system's p95 exploded 292 → 708ms
+as data grew. Latency curve, not millisecond, is the metric.
+
+Correctness wins alongside speed: `@Version` optimistic locking verified by a deterministic race
+(30×200 + 10×409, zero silent lost updates); cart-restaurant rule, order state machine and all 34
+endpoints smoke-verified.
+
+Conclusion: the modular monolith is healthy at this scale. Microservices are deferred on evidence
+with documented re-open triggers — system design decided the architecture, not fashion.
+
 ## Methodology
 
 - Journeys, not single endpoints: one script = one user story covering several endpoints.
