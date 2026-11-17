@@ -1,6 +1,7 @@
 package dev.manu.food_delivery_app.control;
 
 import dev.manu.food_delivery_app.dto.order.OrderResponse;
+import dev.manu.food_delivery_app.dto.order.PageResponse;
 import dev.manu.food_delivery_app.dto.order.OrderStatusUpdateRequest;
 import dev.manu.food_delivery_app.dto.order.PageResponse;
 import dev.manu.food_delivery_app.service.OrderService;
@@ -50,8 +51,10 @@ public class OrderController {
 
     @GetMapping("/restaurant/mine")
     @PreAuthorize("hasRole('RESTAURANT_OWNER')")
-    public List<OrderResponse> getOwnerOrder() {
-        return orderService.getOwnerOrders();
+    public PageResponse<OrderResponse> getOwnerOrder(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        return orderService.getOwnerOrders(pageable);
     }
 
     @PatchMapping("/{orderId}/status")

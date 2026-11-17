@@ -14,12 +14,16 @@ import java.util.UUID;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, UUID> {
-    @Query("SELECT o FROM Order o JOIN FETCH o.restaurant WHERE o.customer = :customer ORDER BY o.createdAt DESC")
+    // sort is owned by the Pageable (controller @PageableDefault) - no ORDER BY here
+    @Query("SELECT o FROM Order o JOIN FETCH o.restaurant WHERE o.customer = :customer")
     Page<Order> findMyOrders(@Param("customer") User customer, Pageable pageable);
 
-    List<Order> findByRestaurant_OwnerOrderByCreatedAtDesc(User owner);
-    List<Order> findAllByOrderByCreatedAtDesc();
+    // owner order list: paged, to-one fetch joins only (collection fetch + Pageable would paginate in memory)
+    @Query("SELECT o FROM Order o JOIN FETCH o.restaurant WHERE o.restaurant.owner = :owner")
+    Page<Order> findOwnerOrders(@Param("owner") User owner, Pageable pageable);
 
-    @Query("SELECT o FROM Order o JOIN FETCH o.orderItems JOIN FETCH o.restaurant WHERE o.customer = :customer ORDER BY o.createdAt DESC")
-    List<Order> findMyOrdersWithItems(@Param("customer") User customer);
+    // admin order list: needs customer + restaurant (to-one) but NO items -> single query, no items round-trip
+    @Query("SELECT o FROM Order o JOIN FETCH o.restaurant JOIN FETCH o.customer")
+    Page<Order> findAdminOrders(Pageable pageable);
+
 }

@@ -3,6 +3,7 @@ package dev.manu.food_delivery_app.service;
 import dev.manu.food_delivery_app.dto.admin.AdminOrderResponse;
 import dev.manu.food_delivery_app.dto.admin.AdminRestaurantResponse;
 import dev.manu.food_delivery_app.dto.admin.AdminUserResponse;
+import dev.manu.food_delivery_app.dto.order.PageResponse;
 import dev.manu.food_delivery_app.entity.Order;
 import dev.manu.food_delivery_app.entity.Restaurant;
 import dev.manu.food_delivery_app.entity.User;
@@ -13,6 +14,8 @@ import dev.manu.food_delivery_app.repository.OrderRepository;
 import dev.manu.food_delivery_app.repository.RestaurantRepository;
 import dev.manu.food_delivery_app.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -111,8 +114,10 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
-    public List<AdminOrderResponse> getAllOrders() {
-        return orderRepository.findAllByOrderByCreatedAtDesc().stream()
+    public PageResponse<AdminOrderResponse> getAllOrders(Pageable pageable) {
+        Page<Order> page = orderRepository.findAdminOrders(pageable);
+        List<AdminOrderResponse> content = page.getContent().stream()
                 .map(this::toAdminOrderResponse).toList();
+        return PageResponse.from(page, content);
     }
 }

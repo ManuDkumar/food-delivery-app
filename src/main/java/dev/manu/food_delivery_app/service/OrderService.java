@@ -168,9 +168,17 @@ public class OrderService {
         return toOrderResponse(savedOrder);
     }
 
-    public List<OrderResponse> getOwnerOrders() {
-        return orderRepository.findByRestaurant_OwnerOrderByCreatedAtDesc(getUser())
-                .stream().map(this::toOrderResponse).toList();
+    public PageResponse<OrderResponse> getOwnerOrders(Pageable pageable) {
+        Page<Order> page = orderRepository.findOwnerOrders(getUser(), pageable);
+        List<Order> orders = page.getContent();
+
+        Map<UUID, List<OrderItem>> itemsByOrder = orders.isEmpty() ? Map.of()
+                : orderItemRepository.findItemsOfOrders(orders).stream()
+                        .collect(Collectors.groupingBy(oi -> oi.getOrder().getId()));
+        List<OrderResponse> content = orders.stream()
+                .map(o -> toOrderResponse(o, itemsByOrder.getOrDefault(o.getId(), List.of())))
+                .toList();
+        return PageResponse.from(page, content);
     }
 
     @Transactional
