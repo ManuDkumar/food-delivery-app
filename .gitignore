@@ -45,3 +45,6 @@ desktop.ini
 ### Java crash dumps ###
 hs_err_pid*
 replay_pid*
+
+### Phase 3 local plan (working notes, not for the repo) ###
+docs/phase3/plan.md
