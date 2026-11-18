@@ -1,0 +1,20 @@
+server:
+  port: 8091
+spring:
+  application:
+    name: restaurant-service
+  profiles:
+    active: dev
+  web:
+    error:
+      include-message: always
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics
