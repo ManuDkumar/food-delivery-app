@@ -48,7 +48,7 @@ public class AuthService {
 
 
         return new AuthResponse(jwtUtility.generateToken(
-                user.getEmail()), user.getName(), user.getEmail(), user.getRole().name());
+                user), user.getName(), user.getEmail(), user.getRole().name());
     }
 
     public AuthResponse restaurantRegister(RegisterRequest registerRequest) {
@@ -71,7 +71,7 @@ public class AuthService {
 
 
         return new AuthResponse(jwtUtility.generateToken(
-                user.getEmail()), user.getName(), user.getEmail(), user.getRole().name());
+                user), user.getName(), user.getEmail(), user.getRole().name());
     }
 
     public AuthResponse registerAdmin(RegisterRequest registerRequest) {
@@ -94,7 +94,7 @@ public class AuthService {
 
 
         return new AuthResponse(jwtUtility.generateToken(
-                user.getEmail()), user.getName(), user.getEmail(), user.getRole().name());
+                user), user.getName(), user.getEmail(), user.getRole().name());
     }
 
     public AuthResponse login(LoginRequest loginRequest) {
@@ -110,6 +110,6 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Account is not active");
         }
         return new AuthResponse(jwtUtility.generateToken(
-                user.getEmail()), user.getName(), user.getEmail(), user.getRole().name());
+                user), user.getName(), user.getEmail(), user.getRole().name());
     }
 }
