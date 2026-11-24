@@ -1,4 +1,4 @@
-package dev.manu.restaurant_service.control;
+package dev.manu.restaurant_service.controller;
 
 import dev.manu.restaurant_service.dto.menu.MenuItemRequest;
 import dev.manu.restaurant_service.dto.menu.MenuItemResponse;

@@ -26,3 +26,6 @@ management:
 app:
   jwt:
     expiration: 3600000
+  service:
+    restaurant:
+      base-url: ${RESTAURANT_SERVICE_URL:http://localhost:8091}

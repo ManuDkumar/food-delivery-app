@@ -20,6 +20,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import dev.manu.food_delivery_app.client.RestaurantClient;
+import dev.manu.food_delivery_app.dto.external.MenuItemSnapshot;
+import org.springframework.web.client.RestClientException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -36,6 +39,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final CartItemRepository cartItemRepository;
     private final OrderItemRepository orderItemRepository;
+    private final RestaurantClient restaurantClient;
 
 
     private User getUser() {
@@ -72,14 +76,23 @@ public class OrderService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Cart is empty");
         }
 
+        Restaurant restaurant = cart.get(0).getMenuItem().getRestaurant();
+
+        Map<UUID, MenuItemSnapshot> menu;
+        try {
+            menu = restaurantClient.getMenu(restaurant.getId());
+        } catch (RestClientException e) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Restaurant service is unavailable, Please try again.");
+        }
         for(CartItem cartItem : cart) {
-            if(!cartItem.getMenuItem().isActive() || !cartItem.getMenuItem().isAvailable()) {
+            MenuItemSnapshot item = menu.get(cartItem.getMenuItem().getId());
+            if(item == null || !item.available()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
                         "Restaurant is not serving this item any more");
             }
         }
 
-        Restaurant restaurant = cart.get(0).getMenuItem().getRestaurant();
         BigDecimal totalPrice = BigDecimal.ZERO;
 
 
@@ -90,16 +103,18 @@ public class OrderService {
 
         for (CartItem cartItem : cart) {
             MenuItem menuItem = cartItem.getMenuItem();
+            MenuItemSnapshot item = menu.get(menuItem.getId());
+
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
             orderItem.setMenuItem(menuItem);
             orderItem.setQuantity(cartItem.getQuantity());
-            orderItem.setName(menuItem.getName());
-            orderItem.setUnitPrice(menuItem.getPrice());
+            orderItem.setName(item.name());
+            orderItem.setUnitPrice(item.price());
 
             order.getOrderItems().add(orderItem);
-            totalPrice = totalPrice.add(orderItem.getUnitPrice().
-                    multiply(BigDecimal.valueOf(cartItem.getQuantity())));
+            totalPrice = totalPrice.add(item.price()
+                    .multiply(BigDecimal.valueOf(cartItem.getQuantity())));
         }
 
         order.setTotalPrice(totalPrice);
