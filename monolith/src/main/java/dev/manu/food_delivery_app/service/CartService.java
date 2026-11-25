@@ -6,16 +6,12 @@ import dev.manu.food_delivery_app.dto.cart.CartQuantityUpdateRequest;
 import dev.manu.food_delivery_app.dto.cart.CartResponse;
 import dev.manu.food_delivery_app.entity.CartItem;
 import dev.manu.food_delivery_app.entity.MenuItem;
-import dev.manu.food_delivery_app.entity.User;
 import dev.manu.food_delivery_app.repository.CartItemRepository;
 import dev.manu.food_delivery_app.repository.MenuItemRepository;
-import dev.manu.food_delivery_app.repository.UserRepository;
-import dev.manu.food_delivery_app.security.AuthUserDetails;
+import dev.manu.food_delivery_app.security.CurrentUser;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,23 +27,6 @@ public class CartService {
 
     private final CartItemRepository cartItemRepository;
     private final MenuItemRepository menuItemRepository;
-    private final UserRepository userRepository;
-
-    //Helper: private functions for help
-
-    private User getUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication != null && authentication.getPrincipal() instanceof AuthUserDetails authUser) {
-            return authUser.getUser();
-        }
-
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        User user = userRepository.findByEmail(email).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not authenticated"));
-        return user;
-    }
 
     private CartItemResponse toCartItemResponse(CartItem cartItem) {
         return new CartItemResponse(
@@ -76,7 +55,7 @@ public class CartService {
 
     @Transactional(readOnly = true)
     public CartResponse getCart() {
-        return toCartResponse(cartItemRepository.findCartWithMenuItems(getUser()));
+        return toCartResponse(cartItemRepository.findCartWithMenuItems(CurrentUser.get().userId()));
     }
 
     @Transactional
@@ -93,9 +72,9 @@ public class CartService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Menu item not available");
         }
 
-        User user = getUser();
+        UUID userId = CurrentUser.get().userId();
 
-        List<CartItem> cart = cartItemRepository.findCartWithMenuItems(user);
+        List<CartItem> cart = cartItemRepository.findCartWithMenuItems(userId);
         Optional<CartItem> existing = cart.stream()
                 .filter(ci -> ci.getMenuItem().getId().equals(request.menuItemId())).findFirst();
 
@@ -121,7 +100,7 @@ public class CartService {
         }
 
         CartItem fresh = new CartItem();
-        fresh.setUser(user);
+        fresh.setUserId(userId);
         fresh.setMenuItem(menuItem);
         fresh.setQuantity(request.quantity());
 
@@ -136,41 +115,41 @@ public class CartService {
 
     @Transactional
     public CartResponse updateItemQuantity(UUID itemId, CartQuantityUpdateRequest request) {
-        User user = getUser();
+        UUID userId = CurrentUser.get().userId();
         Optional<CartItem> cartItem = cartItemRepository.findById(itemId);
 
         if (cartItem.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart item not found");
         }
 
-        if (!cartItem.get().getUser().getId().equals(user.getId())) {
+        if (!cartItem.get().getUserId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart item not found");
         }
 
         cartItem.get().setQuantity(request.quantity());
         cartItemRepository.save(cartItem.get());
-        return toCartResponse(cartItemRepository.findCartWithMenuItems(user));
+        return toCartResponse(cartItemRepository.findCartWithMenuItems(userId));
     }
 
     @Transactional
     public CartResponse removeItemFromCart(UUID itemId) {
-        User user = getUser();
+        UUID userId = CurrentUser.get().userId();
         Optional<CartItem> cartItem = cartItemRepository.findById(itemId);
 
         if (cartItem.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart item not found");
         }
 
-        if (!cartItem.get().getUser().getId().equals(user.getId())) {
+        if (!cartItem.get().getUserId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart item not found");
         }
         cartItemRepository.delete(cartItem.get());
-        return toCartResponse(cartItemRepository.findCartWithMenuItems(user));
+        return toCartResponse(cartItemRepository.findCartWithMenuItems(userId));
     }
 
     @Transactional
     public void clearCart() {
-        List<CartItem> cartItems = cartItemRepository.findByUserOrderByCreatedAtAsc(getUser());
+        List<CartItem> cartItems = cartItemRepository.findByUserIdOrderByCreatedAtAsc(CurrentUser.get().userId());
         cartItemRepository.deleteAll(cartItems);
     }
 }

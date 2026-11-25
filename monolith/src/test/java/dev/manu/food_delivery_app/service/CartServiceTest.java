@@ -6,15 +6,11 @@ import dev.manu.food_delivery_app.dto.cart.CartResponse;
 import dev.manu.food_delivery_app.entity.CartItem;
 import dev.manu.food_delivery_app.entity.MenuItem;
 import dev.manu.food_delivery_app.entity.Restaurant;
-import dev.manu.food_delivery_app.entity.User;
 import dev.manu.food_delivery_app.enums.RestaurantStatus;
-import dev.manu.food_delivery_app.enums.Role;
-import dev.manu.food_delivery_app.enums.UserStatus;
 import dev.manu.food_delivery_app.repository.CartItemRepository;
 import dev.manu.food_delivery_app.repository.MenuItemRepository;
-import dev.manu.food_delivery_app.repository.UserRepository;
+import dev.manu.food_delivery_app.security.CurrentUser;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -38,65 +34,55 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class CartServiceTest {
     @Mock
-    private UserRepository userRepository;
-    @Mock
     private MenuItemRepository menuItemRepository;
     @Mock
     private CartItemRepository cartItemRepository;
     @InjectMocks
     private CartService cartService;
 
-    private MenuItem menuItem(
-            UUID id, Restaurant restaurant, BigDecimal price, boolean active, boolean available) {
-        return MenuItem.builder().id(id).name("Paneer Tikka").price(price).active(active).available(available).restaurant(restaurant).build();
-    }
-
-    private CartItem cartItem(User customer, MenuItem menuItem, int quantity) {
-        CartItem cartItem = new CartItem();
-        cartItem.setMenuItem(menuItem);
-        cartItem.setQuantity(quantity);
-        cartItem.setUser(customer);
-        cartItem.setId(UUID.randomUUID());
-        return cartItem;
-    }
-
-    private User user(String email, Role role, UserStatus
-            status) {
-        return User.builder()
-                .id(UUID.randomUUID())
-                .email(email)
-                .role(role)
-                .userStatus(status)
-                .build();
-    }
-
-    private Restaurant restaurant(RestaurantStatus
-            status) {
-        return Restaurant.builder()
-                .id(UUID.randomUUID())
-                .name("Test Restaurant")
-                .address("Test Street 1")
-                .status(status)
-                .build();
-    }
-    @BeforeEach
-    void seedCustomer() {
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken("customer@test.com", null, List.of())
-        );
-    }
     @AfterEach
     void clear() {
         SecurityContextHolder.clearContext();
     }
+    private CurrentUser login(UUID userId) {
+        CurrentUser principal = new CurrentUser(userId, "customer@test.com", "Customer", "CUSTOMER");
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, List.of()));
+        return principal;
+    }
+
+    private Restaurant restaurant() {
+        return Restaurant.builder()
+                .id(UUID.randomUUID())
+                .name("Test Restaurant")
+                .address("Test Street 1")
+                .status(RestaurantStatus.OPEN)
+                .build();
+    }
+    private MenuItem menuItem(
+            Restaurant restaurant, BigDecimal price, boolean active, boolean available) {
+        return MenuItem.builder()
+                .id(UUID.randomUUID())
+                .name("Paneer Tikka")
+                .price(price)
+                .active(active)
+                .available(available)
+                .restaurant(restaurant)
+                .build();
+    }
+
+    private CartItem cartItem(UUID userId, MenuItem menuItem, int quantity) {
+        CartItem cartItem = new CartItem();
+        cartItem.setMenuItem(menuItem);
+        cartItem.setQuantity(quantity);
+        cartItem.setUserId(userId);
+        cartItem.setId(UUID.randomUUID());
+        return cartItem;
+    }
 
     @Test
     void addItem_inactiveMenuItem_throws404() {
-
-        User customer = user("customer@test.com", Role.CUSTOMER, UserStatus.ACTIVE);
-        Restaurant restaurant = restaurant(RestaurantStatus.OPEN);
-
-        MenuItem item = menuItem(UUID.randomUUID(), restaurant, BigDecimal.ONE, false, true);
+        MenuItem item = menuItem(restaurant(), BigDecimal.ONE, false, true);
         CartItemRequest request = new CartItemRequest(item.getId(), 1);
 
         when(menuItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
@@ -107,45 +93,40 @@ public class CartServiceTest {
         assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(ex.getReason()).isEqualTo("Menu item not active");
 
-        verify(menuItemRepository, times(1)).findById(item.getId());
+        verify(menuItemRepository, never()).saveAndFlush(any());
     }
     @Test
     void addItem_quantityExceeded100_Throw400() {
-        User customer = user("customer@test.com", Role.CUSTOMER, UserStatus.ACTIVE);
-        Restaurant restaurant = restaurant(RestaurantStatus.OPEN);
+        UUID customerId = UUID.randomUUID();
+        login(customerId);
 
-        MenuItem item = menuItem(UUID.randomUUID(), restaurant, BigDecimal.ONE, true, true);
-        CartItem cartItem = cartItem(customer, item, 50);
+        MenuItem item = menuItem(restaurant(), BigDecimal.ONE, true, true);
+        CartItem cartItem = cartItem(customerId, item, 50);
 
-        CartItemRequest request = new CartItemRequest(item.getId(), Integer.valueOf(80));
+        CartItemRequest request = new CartItemRequest(item.getId(), 80);
 
         when(menuItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
-        when(userRepository.findByEmail(customer.getEmail())).thenReturn(Optional.of(customer));
-        when(cartItemRepository.findCartWithMenuItems(customer)).thenReturn(List.of(cartItem));
+        when(cartItemRepository.findCartWithMenuItems(customerId)).thenReturn(List.of(cartItem));
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> cartService.addItemToCart(request));
         assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(ex.getReason()).isEqualTo("Quantity exceeded, maximum allowed quantity is 100");
-
-        verify(cartItemRepository, times(1)).findCartWithMenuItems(customer);
     }
 
     @Test
     void addItem_differentRestaurant_Throw409() {
-        User customer = user("customer@test.com", Role.CUSTOMER, UserStatus.ACTIVE);
-        Restaurant restaurant1 = restaurant(RestaurantStatus.OPEN);
-        Restaurant restaurant2 = restaurant(RestaurantStatus.OPEN);
+        UUID customerId = UUID.randomUUID();
+        login(customerId);
 
-        MenuItem existingItem = menuItem(UUID.randomUUID(), restaurant1, BigDecimal.ONE, true, true);
-        MenuItem itemToAdd = menuItem(UUID.randomUUID(), restaurant2, BigDecimal.ONE, true, true);
+        MenuItem existingItem = menuItem(restaurant(), BigDecimal.ONE, true, true);
+        MenuItem itemToAdd = menuItem(restaurant(), BigDecimal.ONE, true, true);
 
-        CartItem cartItem = cartItem(customer, existingItem, 50);
+        CartItem existing = cartItem(customerId, existingItem, 2);
         CartItemRequest request = new CartItemRequest(itemToAdd.getId(), 1);
 
         when(menuItemRepository.findById(itemToAdd.getId())).thenReturn(Optional.of(itemToAdd));
-        when(userRepository.findByEmail(customer.getEmail())).thenReturn(Optional.of(customer));
-        when(cartItemRepository.findCartWithMenuItems(customer)).thenReturn(List.of(cartItem));
+        when(cartItemRepository.findCartWithMenuItems(customerId)).thenReturn(List.of(existing));
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> cartService.addItemToCart(request));
@@ -154,42 +135,40 @@ public class CartServiceTest {
         assertThat(ex.getReason()).isEqualTo("Cart has item from different restaurant. clear it first");
     }
 
-    //todo: net tests
     @Test
     void addItem_toSameRestaurant_addUp_priceAndQuantity() {
-        User customer = user("customer@test.com", Role.CUSTOMER, UserStatus.ACTIVE);
-        Restaurant restaurant = restaurant(RestaurantStatus.OPEN);
+        UUID customerId = UUID.randomUUID();
+        login(customerId);
 
-        MenuItem item = menuItem(UUID.randomUUID(), restaurant, BigDecimal.valueOf(25), true, true);
-
-        CartItem cartItem = cartItem(customer, item, 1);
+        MenuItem item = menuItem(restaurant(), BigDecimal.valueOf(25), true, true);
+        CartItem existing = cartItem(customerId, item, 1);
         CartItemRequest request = new CartItemRequest(item.getId(), 2);
 
         when(menuItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
-        when(userRepository.findByEmail(customer.getEmail())).thenReturn(Optional.of(customer));
-        when(cartItemRepository.findCartWithMenuItems(customer)).thenReturn(List.of(cartItem));
+        when(cartItemRepository.findCartWithMenuItems(customerId)).thenReturn(List.of(existing));
         CartResponse response = cartService.addItemToCart(request);
 
         assertThat(response.total()).isEqualTo(BigDecimal.valueOf(75));
         assertThat(response.items().size()).isEqualTo(1);
-        verify(cartItemRepository).save(any());
+        assertThat(existing.getQuantity()).isEqualTo(3);
+        verify(cartItemRepository).save(existing);
     }
 
     @Test
     void updateItemQuantity_CustomerNotOwn_Cart_Throw404() {
-        User customerOwnCart = user("customer@own.com", Role.CUSTOMER, UserStatus.ACTIVE);
-        User customerNotOwnCart = user("customer@test.com", Role.CUSTOMER, UserStatus.ACTIVE);
+        UUID ownerId = UUID.randomUUID();
+        UUID otherId = UUID.randomUUID();
+        login(otherId);
 
-        Restaurant restaurant = restaurant(RestaurantStatus.OPEN);
-        MenuItem item = menuItem(UUID.randomUUID(), restaurant, BigDecimal.valueOf(25), true, true);
+        MenuItem item = menuItem(restaurant(), BigDecimal.valueOf(25), true, true);
 
-        CartItem cartItem = cartItem(customerOwnCart, item, 50);
+        CartItem cartItem = cartItem(ownerId, item, 5);
         CartQuantityUpdateRequest request = new CartQuantityUpdateRequest(5);
 
         when(cartItemRepository.findById(cartItem.getId())).thenReturn(Optional.of(cartItem));
-        when(userRepository.findByEmail(customerNotOwnCart.getEmail())).thenReturn(Optional.of(customerNotOwnCart));
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> cartService.updateItemQuantity(cartItem.getId(), request));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+                cartService.updateItemQuantity(cartItem.getId(), new  CartQuantityUpdateRequest(10)));
 
         assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(ex.getReason()).isEqualTo("Cart item not found");

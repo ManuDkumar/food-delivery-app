@@ -22,10 +22,6 @@ public class CartItem {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_item_id", nullable = false)
     private MenuItem menuItem;
 
@@ -53,4 +49,7 @@ public class CartItem {
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
+
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 }

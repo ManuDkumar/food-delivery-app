@@ -13,6 +13,7 @@ import dev.manu.food_delivery_app.enums.UserStatus;
 import dev.manu.food_delivery_app.repository.OrderRepository;
 import dev.manu.food_delivery_app.repository.RestaurantRepository;
 import dev.manu.food_delivery_app.repository.UserRepository;
+import dev.manu.food_delivery_app.security.CurrentUser;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,8 +41,7 @@ public class AdminService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "User not found: " + userId));
 
-        String currentUser = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
+        String currentUser = CurrentUser.get().email();
         if (user.getEmail().equals(currentUser) && userStatus != UserStatus.ACTIVE) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Admin can not change status to " + userStatus);
         }
@@ -105,8 +105,8 @@ public class AdminService {
                 order.getId(),
                 order.getRestaurant().getId(),
                 order.getRestaurant().getName(),
-                order.getCustomer().getName(),
-                order.getCustomer().getEmail(),
+                order.getCustomerName(),
+                order.getCustomerEmail(),
                 order.getStatus(),
                 order.getTotalPrice(),
                 order.getCreatedAt()

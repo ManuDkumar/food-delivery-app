@@ -31,6 +31,7 @@ public class JWTUtility {
                 .setSubject(user.getEmail())
                 .claim("userId", user.getId().toString())
                 .claim("role", user.getRole().name())
+                .claim("name", user.getName())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(key, SignatureAlgorithm.HS256)

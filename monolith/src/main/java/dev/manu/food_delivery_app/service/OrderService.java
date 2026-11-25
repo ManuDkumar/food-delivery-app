@@ -9,14 +9,11 @@ import dev.manu.food_delivery_app.enums.OrderStatus;
 import dev.manu.food_delivery_app.repository.CartItemRepository;
 import dev.manu.food_delivery_app.repository.OrderItemRepository;
 import dev.manu.food_delivery_app.repository.OrderRepository;
-import dev.manu.food_delivery_app.repository.UserRepository;
-import dev.manu.food_delivery_app.security.AuthUserDetails;
+import dev.manu.food_delivery_app.security.CurrentUser;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -36,25 +33,10 @@ import java.util.stream.Collectors;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final UserRepository userRepository;
     private final CartItemRepository cartItemRepository;
     private final OrderItemRepository orderItemRepository;
     private final RestaurantClient restaurantClient;
 
-
-    private User getUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication != null && authentication.getPrincipal() instanceof AuthUserDetails authUser) {
-            return authUser.getUser();
-        }
-
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        return userRepository.findByEmail(email).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not authenticated")
-        );
-    }
 
     private OrderItemResponse toOrderItemResponse(OrderItem orderItem) {
         return new OrderItemResponse(
@@ -69,8 +51,8 @@ public class OrderService {
 
     @Transactional
     public OrderResponse placeOrder() {
-        User currentUser = getUser();
-        List<CartItem> cart = cartItemRepository.findCartWithMenuItems(currentUser);
+        CurrentUser me = CurrentUser.get();
+        List<CartItem> cart = cartItemRepository.findCartWithMenuItems(me.userId());
 
         if (cart.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Cart is empty");
@@ -97,7 +79,9 @@ public class OrderService {
 
 
         Order order = new Order();
-        order.setCustomer(currentUser);
+        order.setCustomerId(me.userId());
+        order.setCustomerName(me.name());
+        order.setCustomerEmail(me.email());
         order.setRestaurant(restaurant);
         order.setStatus(OrderStatus.PLACED);
 
@@ -144,7 +128,7 @@ public class OrderService {
     }
 
     public PageResponse<OrderResponse> getMyOrders(Pageable pageable) {
-        Page<Order> page = orderRepository.findMyOrders(getUser(), pageable);
+        Page<Order> page = orderRepository.findMyOrders(CurrentUser.get().userId(), pageable);
         List<Order>  orders = page.getContent();
 
         Map<UUID, List<OrderItem>> itemsByOrder = orders.isEmpty() ? Map.of() :
@@ -165,7 +149,7 @@ public class OrderService {
         Order order = orderRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found")
         );
-        if(!order.getCustomer().getId().equals(getUser().getId())) {
+        if(!order.getCustomerId().equals(CurrentUser.get().userId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
         }
         return order;
@@ -184,7 +168,7 @@ public class OrderService {
     }
 
     public PageResponse<OrderResponse> getOwnerOrders(Pageable pageable) {
-        Page<Order> page = orderRepository.findOwnerOrders(getUser(), pageable);
+        Page<Order> page = orderRepository.findOwnerOrders(CurrentUser.get().userId(), pageable);
         List<Order> orders = page.getContent();
 
         Map<UUID, List<OrderItem>> itemsByOrder = orders.isEmpty() ? Map.of()
@@ -202,7 +186,7 @@ public class OrderService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found")
         );
 
-        if (!order.getRestaurant().getOwner().getId().equals(getUser().getId())) {
+        if (!order.getRestaurant().getOwner().getId().equals(CurrentUser.get().userId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
         }
 

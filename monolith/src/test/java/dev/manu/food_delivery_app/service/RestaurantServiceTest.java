@@ -8,8 +8,8 @@ import dev.manu.food_delivery_app.enums.RestaurantStatus;
 import dev.manu.food_delivery_app.enums.Role;
 import dev.manu.food_delivery_app.repository.RestaurantRepository;
 import dev.manu.food_delivery_app.repository.UserRepository;
+import dev.manu.food_delivery_app.security.CurrentUser;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -38,11 +38,12 @@ public class RestaurantServiceTest {
     @InjectMocks
     private RestaurantService restaurantService;
 
-    @BeforeEach
-    void seedCustomer() {
+    /** Simulates exactly what JwtAuthFilter puts into the SecurityContext. */
+    private void loginAs(User u) {
+        CurrentUser principal = new CurrentUser(u.getId(), u.getEmail(), u.
+                getName(), u.getRole().name());
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken("customer@test.com", null, List.of())
-        );
+                new UsernamePasswordAuthenticationToken(principal, null, List.of()));
     }
     @AfterEach
     void clear() {
@@ -81,8 +82,9 @@ public class RestaurantServiceTest {
         Restaurant restaurant = restaurant(RestaurantStatus.OPEN);
         RestaurantUpdateRequest request = new RestaurantUpdateRequest(restaurant.getName(), null, restaurant.getAddress(), "95957685");
 
+        loginAs(notOwner);
         when(restaurantRepository.findById(restaurant.getId())).thenReturn(Optional.of(restaurant));
-        when(userRepository.findByEmail("customer@test.com")).thenReturn(Optional.of(notOwner));
+        when(userRepository.findById(notOwner.getId())).thenReturn(Optional.of(notOwner));
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> restaurantService.updateRestaurant(restaurant.getId(), request));
@@ -94,8 +96,10 @@ public class RestaurantServiceTest {
 
         Restaurant restaurant = restaurant(RestaurantStatus.OPEN);
         RestaurantUpdateRequest request = new RestaurantUpdateRequest("New Name", null, restaurant.getAddress(), null);
+        loginAs(restaurant.getOwner());
+
         when(restaurantRepository.findById(restaurant.getId())).thenReturn(Optional.of(restaurant));
-        when(userRepository.findByEmail("customer@test.com")).thenReturn(Optional.of(restaurant.getOwner()));
+        when(userRepository.findById(restaurant.getOwner().getId())).thenReturn(Optional.of(restaurant.getOwner()));
         when(restaurantRepository.saveAndFlush(restaurant)).thenAnswer(i -> i.getArgument(0));
 
         PublicRestaurantResponse result = restaurantService.updateRestaurant(restaurant.getId(), request);

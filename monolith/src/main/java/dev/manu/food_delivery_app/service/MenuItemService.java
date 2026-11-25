@@ -11,11 +11,9 @@ import dev.manu.food_delivery_app.enums.Role;
 import dev.manu.food_delivery_app.repository.MenuItemRepository;
 import dev.manu.food_delivery_app.repository.RestaurantRepository;
 import dev.manu.food_delivery_app.repository.UserRepository;
-import dev.manu.food_delivery_app.security.AuthUserDetails;
+import dev.manu.food_delivery_app.security.CurrentUser;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -52,17 +50,8 @@ public class MenuItemService {
     }
 
     private User getUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication != null && authentication.getPrincipal() instanceof AuthUserDetails authUser) {
-            return authUser.getUser();
-        }
-
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        User user = userRepository.findByEmail(email).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not authenticated"));
-        return user;
+        return userRepository.findById(CurrentUser.get().userId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Unknown User"));
     }
 
 
