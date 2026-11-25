@@ -1,0 +1,21 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: gateway
+  profiles:
+    active: dev
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+app:
+  services:
+    restaurant:
+      base-url: ${RESTAURANT_SERVICE_URL:http://localhost:8091}
+    monolith:
+      base-url: ${MONOLITH_URL:http://localhost:8081}
