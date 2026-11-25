@@ -1,0 +1,24 @@
+server:
+  port: 8092
+spring:
+  application:
+    name: user-service
+  profiles:
+    active: dev
+  web:
+    error:
+      include-message: always
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics
+
+app:
+  jwt:
+    expiration: 3600000

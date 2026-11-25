@@ -1,9 +1,9 @@
-package dev.manu.food_delivery_app.control;
+package dev.manu.user_service.controller;
 
-import dev.manu.food_delivery_app.dto.auth.AuthResponse;
-import dev.manu.food_delivery_app.dto.auth.LoginRequest;
-import dev.manu.food_delivery_app.dto.user.RegisterRequest;
-import dev.manu.food_delivery_app.service.AuthService;
+import dev.manu.user_service.dto.auth.AuthResponse;
+import dev.manu.user_service.dto.auth.LoginRequest;
+import dev.manu.user_service.dto.user.RegisterRequest;
+import dev.manu.user_service.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;

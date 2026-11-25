@@ -19,3 +19,5 @@ app:
       base-url: ${RESTAURANT_SERVICE_URL:http://localhost:8091}
     monolith:
       base-url: ${MONOLITH_URL:http://localhost:8081}
+    user:
+      base-url: ${USER_SERVICE_URL:http://localhost:8092}

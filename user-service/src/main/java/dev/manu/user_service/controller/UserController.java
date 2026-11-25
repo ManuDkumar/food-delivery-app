@@ -1,8 +1,8 @@
-package dev.manu.food_delivery_app.control;
+package dev.manu.user_service.controller;
 
-import dev.manu.food_delivery_app.dto.user.ProfileResponse;
-import dev.manu.food_delivery_app.dto.user.ProfileUpdateRequest;
-import dev.manu.food_delivery_app.service.UserService;
+import dev.manu.user_service.dto.user.ProfileResponse;
+import dev.manu.user_service.dto.user.ProfileUpdateRequest;
+import dev.manu.user_service.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;

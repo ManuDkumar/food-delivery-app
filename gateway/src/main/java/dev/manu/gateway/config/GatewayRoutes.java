@@ -12,8 +12,12 @@ public class GatewayRoutes {
     @Bean
     public RouteLocator routes(RouteLocatorBuilder builder,
                                @Value("${app.services.restaurant.base-url}") String restaurant,
-                               @Value("${app.services.monolith.base-url}") String monolith) {
+                               @Value("${app.services.monolith.base-url}") String monolith,
+                               @Value("${app.services.user.base-url}") String user) {
         return builder.routes()
+                .route("user-service", r -> r
+                        .path("/api/v1/auth/**", "/api/v1/user/**")
+                        .uri(user))
                 .route("restaurant-service", r -> r
                         .path("/api/v1/restaurants/**", "/api/v1/menu/**")
                         .uri(restaurant))

@@ -62,8 +62,7 @@ public class JwtEdgeFilter implements GlobalFilter, Ordered {
         if (method.equals(HttpMethod.POST)) {
             return path.equals("/api/v1/auth/login")
                     || path.equals("/api/v1/auth/customer/register")
-                    || path.equals("/api/v1/auth/restaurant/register")
-                    || path.equals("/api/v1/auth/admin/register");
+                    || path.equals("/api/v1/auth/restaurant/register");
         }
 
         if (method.equals(HttpMethod.GET)) {
