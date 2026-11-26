@@ -2,80 +2,24 @@ package dev.manu.food_delivery_app.service;
 
 import dev.manu.food_delivery_app.dto.admin.AdminOrderResponse;
 import dev.manu.food_delivery_app.dto.admin.AdminRestaurantResponse;
-import dev.manu.food_delivery_app.dto.admin.AdminUserResponse;
 import dev.manu.food_delivery_app.dto.order.PageResponse;
 import dev.manu.food_delivery_app.entity.Order;
 import dev.manu.food_delivery_app.entity.Restaurant;
-import dev.manu.food_delivery_app.entity.User;
-import dev.manu.food_delivery_app.enums.RestaurantStatus;
-import dev.manu.food_delivery_app.enums.Role;
-import dev.manu.food_delivery_app.enums.UserStatus;
 import dev.manu.food_delivery_app.repository.OrderRepository;
 import dev.manu.food_delivery_app.repository.RestaurantRepository;
-import dev.manu.food_delivery_app.repository.UserRepository;
-import dev.manu.food_delivery_app.security.CurrentUser;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @AllArgsConstructor
 public class AdminService {
-
-    private final UserRepository userRepository;
     private final RestaurantRepository restaurantRepository;
     private final OrderRepository orderRepository;
-
-
-    @Transactional
-    public void updateStatus(UUID userId, UserStatus userStatus) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "User not found: " + userId));
-
-        String currentUser = CurrentUser.get().email();
-        if (user.getEmail().equals(currentUser) && userStatus != UserStatus.ACTIVE) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Admin can not change status to " + userStatus);
-        }
-
-        if (user.getUserStatus().equals(userStatus)) {
-            return;
-        }
-        user.setUserStatus(userStatus);
-        userRepository.save(user);
-
-        if (user.getRole() == Role.RESTAURANT_OWNER && userStatus != UserStatus.ACTIVE) {
-            restaurantRepository.findByOwner(user).stream()
-                    .filter(restaurant -> restaurant.getStatus() == RestaurantStatus.OPEN)
-                    .forEach(restaurant -> restaurant.setStatus(RestaurantStatus.CLOSED));
-        }
-    }
-    private AdminUserResponse toAdminUserResponse(User user) {
-        return new AdminUserResponse(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getPhone(),
-                user.getRole(),
-                user.getUserStatus(),
-                user.getCreatedAt(),
-                user.getUpdatedAt()
-        );
-    }
-
-    @Transactional(readOnly = true)
-    public List<AdminUserResponse> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(this::toAdminUserResponse).toList();
-    }
 
     private AdminRestaurantResponse  toAdminRestaurantResponse(Restaurant restaurant) {
         return new AdminRestaurantResponse(

@@ -18,6 +18,9 @@ public class GatewayRoutes {
                 .route("user-service", r -> r
                         .path("/api/v1/auth/**", "/api/v1/user/**")
                         .uri(user))
+                .route("user-service-admin", r -> r
+                        .path("/api/v1/admin/users", "/api/v1/admin/users/**")
+                        .uri(user))
                 .route("restaurant-service", r -> r
                         .path("/api/v1/restaurants/**", "/api/v1/menu/**")
                         .uri(restaurant))

@@ -1,7 +1,7 @@
-package dev.manu.food_delivery_app.dto.admin;
+package dev.manu.user_service.dto.admin;
 
-import dev.manu.food_delivery_app.enums.Role;
-import dev.manu.food_delivery_app.enums.UserStatus;
+import dev.manu.user_service.enums.Role;
+import dev.manu.user_service.enums.UserStatus;
 
 import java.util.Date;
 import java.util.UUID;
