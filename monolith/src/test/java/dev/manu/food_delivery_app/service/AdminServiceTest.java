@@ -8,6 +8,7 @@ import dev.manu.food_delivery_app.enums.UserStatus;
 import dev.manu.food_delivery_app.repository.OrderRepository;
 import dev.manu.food_delivery_app.repository.RestaurantRepository;
 import dev.manu.food_delivery_app.repository.UserRepository;
+import dev.manu.food_delivery_app.security.CurrentUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,8 +42,10 @@ public class AdminServiceTest {
 
     @BeforeEach
     void seedAdmin() {
+        CurrentUser admin = new CurrentUser(
+                UUID.randomUUID(), "Admin@gmail.com", "Admin", "ADMIN");
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken("Admin@gmail.com", null, List.of())
+                new UsernamePasswordAuthenticationToken(admin, null, List.of())
         );
     }
     @AfterEach

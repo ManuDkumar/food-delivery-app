@@ -17,6 +17,9 @@ app:
   jwt:
     secret: "orenu-nava-monkey-d-luffy-kaizokoni-naru-odukuda"
     expiration: 3600000
+  service:
+    restaurant:
+      base-url: http://localhost:8091
   admin:
     email: admin@gmail.com
     password: Admin@123
